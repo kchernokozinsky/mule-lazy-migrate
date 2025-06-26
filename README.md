@@ -2,6 +2,8 @@
 
 A robust, user-friendly CLI tool to automate migration of Mule 4 projects to a new runtime using a JSON config.
 
+**Current Version: v0.1.3**
+
 ## Features
 - Reads a JSON config with upgrade rules (runtime, plugin, munit versions, artifact JSON, string replacements)
 - Traverses the project, updates XML (`pom.xml`), JSON (`mule-artifact.json`), and performs string replacements in source files
@@ -10,6 +12,7 @@ A robust, user-friendly CLI tool to automate migration of Mule 4 projects to a n
 - Colorized, human-friendly summary of changes at the end
 - Optional Maven integration: update dependencies and build after migration
 - **Supports only flat `javaSpecificationVersions` at the root of `mule-artifact.json`**
+- **Verbose logging** for detailed debugging and troubleshooting
 
 ## ⚠️ Important: Dependency Version Updates
 - This tool **does NOT update** `<version>` tags inside `<dependency>` blocks in `pom.xml`.
@@ -48,7 +51,8 @@ mule-lazy-migrate \
 - `--backup`: Create `.bak` backups before modifying files
 - `-u`, `--update-maven-deps`: Run `mvn versions:use-latest-releases` before migration (see warning above)
 - `-b`, `--build-mule-project`: Run `mvn clean install` after migration
-- `-v`, `--verbose`: Show debug logs
+- `-v`, `--verbose`: Show debug logs for detailed troubleshooting
+- `-V`, `--version`: Display version information and exit
 
 ### Example (all options)
 ```sh
@@ -56,6 +60,25 @@ mule-lazy-migrate \
   --config runtime_configs/migration-4.9.4.json \
   --project /path/to/your/mule-project \
   --backup -u -b -v
+```
+
+### Verbose Logging
+Use the `--verbose` flag to enable detailed debug logging. This is useful for:
+- Troubleshooting migration issues
+- Understanding exactly what files are being processed
+- Seeing detailed information about XML and JSON updates
+- Debugging string replacement operations
+- Monitoring Maven integration steps
+
+Example with verbose output:
+```sh
+mule-lazy-migrate --config config.json --verbose
+```
+
+### Version Information
+Check the installed version:
+```sh
+mule-lazy-migrate --version
 ```
 
 ## Output
