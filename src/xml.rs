@@ -140,3 +140,53 @@ pub fn update_pom_xml_summary(
     }
     (changed, updated_props)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::File;
+    use std::io::Write;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_update_pom_xml_summary_changes() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("pom.xml");
+        let xml = r#"<project><properties><mule.version>4.3.0</mule.version><munit.version>3.2.0</munit.version><mule.maven.plugin.version>4.1.0</mule.maven.plugin.version></properties></project>"#;
+        let mut file = File::create(&file_path).unwrap();
+        file.write_all(xml.as_bytes()).unwrap();
+        let (changed, props) = update_pom_xml_summary(
+            file_path.to_str().unwrap(),
+            "4.9.4",
+            "4.3.1",
+            "3.4.0",
+            false,
+            false,
+        );
+        assert!(changed);
+        assert!(props.iter().any(|p| p.contains("mule.version")));
+        assert!(props.iter().any(|p| p.contains("munit.version")));
+        assert!(props
+            .iter()
+            .any(|p| p.contains("mule.maven.plugin.version")));
+    }
+
+    #[test]
+    fn test_update_pom_xml_summary_no_change() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("pom.xml");
+        let xml = r#"<project><properties><mule.version>4.9.4</mule.version><munit.version>3.4.0</munit.version><mule.maven.plugin.version>4.3.1</mule.maven.plugin.version></properties></project>"#;
+        let mut file = File::create(&file_path).unwrap();
+        file.write_all(xml.as_bytes()).unwrap();
+        let (changed, props) = update_pom_xml_summary(
+            file_path.to_str().unwrap(),
+            "4.9.4",
+            "4.3.1",
+            "3.4.0",
+            false,
+            false,
+        );
+        assert!(!changed);
+        assert!(props.is_empty());
+    }
+}

@@ -127,3 +127,60 @@ pub fn update_mule_artifact_json_summary(
     }
     (changed, updated_fields)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::File;
+    use std::io::Write;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_update_mule_artifact_json_summary_changes() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("mule-artifact.json");
+        let json = r#"{
+            "minMuleVersion": "4.3.0",
+            "requiredProduct": {
+                "javaSpecificationVersions": ["8"]
+            }
+        }"#;
+        let mut file = File::create(&file_path).unwrap();
+        file.write_all(json.as_bytes()).unwrap();
+        let (changed, fields) = update_mule_artifact_json_summary(
+            file_path.to_str().unwrap(),
+            "4.9.0",
+            &["17".to_string()],
+            false,
+            false,
+        );
+        assert!(changed);
+        assert!(fields.iter().any(|f| f.contains("minMuleVersion")));
+        assert!(fields
+            .iter()
+            .any(|f| f.contains("javaSpecificationVersions")));
+    }
+
+    #[test]
+    fn test_update_mule_artifact_json_summary_no_change() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("mule-artifact.json");
+        let json = r#"{
+            "minMuleVersion": "4.9.0",
+            "requiredProduct": {
+                "javaSpecificationVersions": ["17"]
+            }
+        }"#;
+        let mut file = File::create(&file_path).unwrap();
+        file.write_all(json.as_bytes()).unwrap();
+        let (changed, fields) = update_mule_artifact_json_summary(
+            file_path.to_str().unwrap(),
+            "4.9.0",
+            &["17".to_string()],
+            false,
+            false,
+        );
+        assert!(!changed);
+        assert!(fields.is_empty());
+    }
+}
