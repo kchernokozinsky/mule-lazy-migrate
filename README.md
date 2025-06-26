@@ -22,16 +22,41 @@ A robust, user-friendly CLI tool to automate migration of Mule 4 projects to a n
 
 ## Installation
 
-### Homebrew (recommended)
+### Homebrew (macOS/Linux - recommended)
 
 ```sh
 brew tap kchernokozinsky/mule-lazy-migrate
 brew install mule-lazy-migrate
 ```
 
-### From source
+### From Source
+
+#### Prerequisites
+- [Rust](https://rustup.rs/) (latest stable)
+- [Git](https://git-scm.com/)
+
+#### Installation Steps
 
 ```sh
+# Clone the repository
+git clone https://github.com/kchernokozinsky/mule-lazy-migrate.git
+cd mule-lazy-migrate
+
+# Build and install
+cargo install --path .
+```
+
+### Windows Installation
+
+For Windows users, install from source:
+
+```powershell
+# Install Rust from https://rustup.rs/
+# Install Git from https://git-scm.com/
+
+# Clone and install
+git clone https://github.com/kchernokozinsky/mule-lazy-migrate.git
+cd mule-lazy-migrate
 cargo install --path .
 ```
 
@@ -85,8 +110,9 @@ mule-lazy-migrate --version
 At the end of each run, a colorized summary is printed, showing all changes, warnings, and errors.
 
 ## Requirements
-- Rust (latest stable) (for building from source)
-- Java & Maven (for Maven integration)
+- **Rust** (latest stable) - for building from source
+- **Java & Maven** - for Maven integration features
+- **Git** - for cloning the repository
 
 ## License
 MIT
