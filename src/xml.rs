@@ -45,11 +45,12 @@ pub fn update_pom_xml(
         did_change
     }
 
-    // Update mule.version, munit.version, mule.maven.plugin.version in properties
+    // Update mule.version, munit.version, mule.maven.plugin.version, app.runtime in properties
     log::info!("Checking properties in pom.xml:");
     changed |= update_property_value(&mut xml_data, "mule.version", runtime_version);
     changed |= update_property_value(&mut xml_data, "munit.version", munit_version);
     changed |= update_property_value(&mut xml_data, "mule.maven.plugin.version", plugin_version);
+    changed |= update_property_value(&mut xml_data, "app.runtime", runtime_version);
 
     if changed {
         if backup {
@@ -128,6 +129,12 @@ pub fn update_pom_xml_summary(
         plugin_version,
         &mut updated_props,
     );
+    changed |= update_property_value(
+        &mut xml_data,
+        "app.runtime",
+        runtime_version,
+        &mut updated_props,
+    );
 
     if changed {
         if backup {
@@ -152,7 +159,7 @@ mod tests {
     fn test_update_pom_xml_summary_changes() {
         let dir = tempdir().unwrap();
         let file_path = dir.path().join("pom.xml");
-        let xml = r#"<project><properties><mule.version>4.3.0</mule.version><munit.version>3.2.0</munit.version><mule.maven.plugin.version>4.1.0</mule.maven.plugin.version></properties></project>"#;
+        let xml = r#"<project><properties><mule.version>4.3.0</mule.version><munit.version>3.2.0</munit.version><mule.maven.plugin.version>4.1.0</mule.maven.plugin.version><app.runtime>4.2.2</app.runtime></properties></project>"#;
         let mut file = File::create(&file_path).unwrap();
         file.write_all(xml.as_bytes()).unwrap();
         let (changed, props) = update_pom_xml_summary(
@@ -169,13 +176,14 @@ mod tests {
         assert!(props
             .iter()
             .any(|p| p.contains("mule.maven.plugin.version")));
+        assert!(props.iter().any(|p| p.contains("app.runtime")));
     }
 
     #[test]
     fn test_update_pom_xml_summary_no_change() {
         let dir = tempdir().unwrap();
         let file_path = dir.path().join("pom.xml");
-        let xml = r#"<project><properties><mule.version>4.9.4</mule.version><munit.version>3.4.0</munit.version><mule.maven.plugin.version>4.3.1</mule.maven.plugin.version></properties></project>"#;
+        let xml = r#"<project><properties><mule.version>4.9.4</mule.version><munit.version>3.4.0</munit.version><mule.maven.plugin.version>4.3.1</mule.maven.plugin.version><app.runtime>4.9.4</app.runtime></properties></project>"#;
         let mut file = File::create(&file_path).unwrap();
         file.write_all(xml.as_bytes()).unwrap();
         let (changed, props) = update_pom_xml_summary(

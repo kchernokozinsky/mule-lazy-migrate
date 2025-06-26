@@ -8,51 +8,35 @@ use config::MigrationConfig;
 use std::path::Path;
 use std::process::Command;
 
+/// Migration options for running the migration tool.
 pub struct MigrationOptions<'a> {
+    /// Path to the migration config JSON file.
     pub config_path: &'a str,
+    /// Path to the Mule project root directory.
     pub project_root: &'a str,
+    /// If true, perform a dry run without making changes.
     pub dry_run: bool,
+    /// If true, create backup files before modifying.
     pub backup: bool,
+    /// If true, update Maven dependencies to latest releases before migration.
     pub update_maven_deps: bool,
+    /// If true, build the Mule project after migration.
     pub build_mule_project: bool,
 }
 
-fn update_maven_dependencies(project_root: &str) {
-    log::info!(
-        "Running 'mvn versions:use-latest-releases' in {}",
-        project_root
-    );
-    let status = Command::new("mvn")
-        .arg("versions:use-latest-releases")
-        .current_dir(project_root)
-        .status();
-    match status {
-        Ok(s) if s.success() => log::info!("Maven dependencies updated to latest releases."),
-        Ok(s) => log::error!("Maven exited with status: {}", s),
-        Err(e) => log::error!("Failed to run Maven: {}", e),
-    }
-}
-
-fn build_mule_project(project_root: &str) {
-    log::info!("Running 'mvn clean install' in {}", project_root);
-    let status = Command::new("mvn")
-        .arg("clean")
-        .arg("install")
-        .current_dir(project_root)
-        .status();
-    match status {
-        Ok(s) if s.success() => log::info!("Mule project built successfully."),
-        Ok(s) => log::error!("Maven exited with status: {}", s),
-        Err(e) => log::error!("Failed to run Maven: {}", e),
-    }
-}
-
-fn is_mule_project(project_root: &str) -> bool {
-    let pom = Path::new(project_root).join("pom.xml");
-    let artifact = Path::new(project_root).join("mule-artifact.json");
-    pom.exists() && artifact.exists()
-}
-
+/// Runs the migration process for a Mule 4 project using the provided options.
+///
+/// This function will:
+/// - Check if the target directory is a Mule project
+/// - Load the migration config
+/// - Optionally update Maven dependencies
+/// - Update pom.xml and mule-artifact.json
+/// - Perform string replacements in source files
+/// - Optionally build the project
+/// - Print a colorized summary of changes
+///
+/// # Errors
+/// Returns an error if the project is not valid or migration fails.
 pub fn run_migration(opts: &MigrationOptions) -> Result<(), Box<dyn std::error::Error>> {
     let mut changed_files = Vec::new();
     let mut changed_properties = Vec::new();
@@ -158,6 +142,58 @@ pub fn run_migration(opts: &MigrationOptions) -> Result<(), Box<dyn std::error::
     Ok(())
 }
 
+/// Runs 'mvn versions:use-latest-releases' in the project root and removes pom.xml.versionsBackup if present.
+fn update_maven_dependencies(project_root: &str) {
+    log::info!(
+        "Running 'mvn versions:use-latest-releases' in {}",
+        project_root
+    );
+    let status = Command::new("mvn")
+        .arg("versions:use-latest-releases")
+        .current_dir(project_root)
+        .status();
+    match status {
+        Ok(s) if s.success() => log::info!("Maven dependencies updated to latest releases."),
+        Ok(s) => log::error!("Maven exited with status: {}", s),
+        Err(e) => log::error!("Failed to run Maven: {}", e),
+    }
+    // Cleanup pom.xml.versionsBackup if it exists
+    let backup_path = std::path::Path::new(project_root).join("pom.xml.versionsBackup");
+    if backup_path.exists() {
+        match std::fs::remove_file(&backup_path) {
+            Ok(_) => log::info!("Removed Maven backup file: {}", backup_path.display()),
+            Err(e) => log::warn!(
+                "Failed to remove Maven backup file {}: {}",
+                backup_path.display(),
+                e
+            ),
+        }
+    }
+}
+
+/// Runs 'mvn clean install' in the project root.
+fn build_mule_project(project_root: &str) {
+    log::info!("Running 'mvn clean install' in {}", project_root);
+    let status = Command::new("mvn")
+        .arg("clean")
+        .arg("install")
+        .current_dir(project_root)
+        .status();
+    match status {
+        Ok(s) if s.success() => log::info!("Mule project built successfully."),
+        Ok(s) => log::error!("Maven exited with status: {}", s),
+        Err(e) => log::error!("Failed to run Maven: {}", e),
+    }
+}
+
+/// Checks if the given directory is a Mule project (contains pom.xml and mule-artifact.json).
+fn is_mule_project(project_root: &str) -> bool {
+    let pom = Path::new(project_root).join("pom.xml");
+    let artifact = Path::new(project_root).join("mule-artifact.json");
+    pom.exists() && artifact.exists()
+}
+
+/// Prints a colorized summary of the migration results.
 fn print_summary(
     changed_files: &[String],
     changed_properties: &[String],

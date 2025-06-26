@@ -4,6 +4,7 @@ use mule_lazy_migrate::{run_migration, MigrationOptions};
 #[derive(Parser)]
 #[command(name = "mule-lazy-migrate")]
 #[command(about = "Migrate Mule 4 projects to a new runtime using a JSON config. The summary at the end is colorized for clarity.", long_about = None)]
+#[command(version = env!("CARGO_PKG_VERSION"))]
 struct Cli {
     /// Path to the JSON config file
     #[arg(short, long)]
@@ -28,11 +29,16 @@ struct Cli {
     /// Build the Mule project with 'mvn clean install' after migration
     #[arg(short = 'b', long)]
     build_mule_project: bool,
+
+    /// Show verbose (debug) logs
+    #[arg(short, long)]
+    verbose: bool,
 }
 
 fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
     let cli = Cli::parse();
+    let log_level = if cli.verbose { "debug" } else { "info" };
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(log_level)).init();
     let opts = MigrationOptions {
         config_path: &cli.config,
         project_root: &cli.project,
