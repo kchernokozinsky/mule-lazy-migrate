@@ -1,0 +1,23 @@
+{
+  "app_runtime_version": "4.9.4",
+  "mule_maven_plugin_version": "4.3.1",
+  "munit_version": "3.4.0",
+  "mule_artifact": {
+    "min_mule_version": "4.9.0",
+    "java_specification_versions": ["17"]
+  },
+  "replacements": [
+    {
+      "from": "error.errorType.asString",
+      "to": "((error.errorType.namespace default '') ++ ':' ++ (error.errorType.identifier default ''))"
+    },
+    {
+      "from": "error.muleMessage",
+      "to": "error.errorMessage"
+    },
+    {
+      "from": "error.errors",
+      "to": "error.childErrors"
+    }
+  ]
+} 
