@@ -89,30 +89,48 @@ pub fn update_mule_artifact_json_summary(
             .expect("Invalid JSON");
 
     if let Some(obj) = json_data.as_object_mut() {
-        if let Some(v) = obj.get_mut("minMuleVersion") {
-            if v != min_mule_version {
-                updated_fields.push(format!("minMuleVersion: '{}' -> '{}'", v, min_mule_version));
-                *v = Value::String(min_mule_version.to_string());
+        // Ensure minMuleVersion exists and is correct
+        match obj.get_mut("minMuleVersion") {
+            Some(v) => {
+                if v != min_mule_version {
+                    updated_fields
+                        .push(format!("minMuleVersion: '{}' -> '{}'", v, min_mule_version));
+                    *v = Value::String(min_mule_version.to_string());
+                    changed = true;
+                }
+            }
+            None => {
+                obj.insert(
+                    "minMuleVersion".to_string(),
+                    Value::String(min_mule_version.to_string()),
+                );
+                updated_fields.push(format!(
+                    "minMuleVersion: <missing> -> '{}'",
+                    min_mule_version
+                ));
                 changed = true;
             }
         }
-        if let Some(v) = obj.get_mut("requiredProduct") {
-            if let Some(req_obj) = v.as_object_mut() {
-                if let Some(jv) = req_obj.get_mut("javaSpecificationVersions") {
-                    let new_val = Value::Array(
-                        java_spec_versions
-                            .iter()
-                            .map(|s| Value::String(s.clone()))
-                            .collect(),
-                    );
-                    if jv != &new_val {
-                        updated_fields
-                            .push("requiredProduct.javaSpecificationVersions".to_string());
-                        *jv = new_val;
-                        changed = true;
-                    }
-                }
+        // Only flat javaSpecificationVersions
+        let new_val = Value::Array(
+            java_spec_versions
+                .iter()
+                .map(|s| Value::String(s.clone()))
+                .collect(),
+        );
+        if let Some(jv) = obj.get_mut("javaSpecificationVersions") {
+            if jv != &new_val {
+                updated_fields.push("javaSpecificationVersions".to_string());
+                *jv = new_val.clone();
+                changed = true;
             }
+        } else {
+            obj.insert("javaSpecificationVersions".to_string(), new_val.clone());
+            updated_fields.push(format!(
+                "javaSpecificationVersions: <missing> -> {:?}",
+                java_spec_versions
+            ));
+            changed = true;
         }
     }
     if changed {
@@ -141,9 +159,7 @@ mod tests {
         let file_path = dir.path().join("mule-artifact.json");
         let json = r#"{
             "minMuleVersion": "4.3.0",
-            "requiredProduct": {
-                "javaSpecificationVersions": ["8"]
-            }
+            "javaSpecificationVersions": ["8"]
         }"#;
         let mut file = File::create(&file_path).unwrap();
         file.write_all(json.as_bytes()).unwrap();
@@ -167,9 +183,7 @@ mod tests {
         let file_path = dir.path().join("mule-artifact.json");
         let json = r#"{
             "minMuleVersion": "4.9.0",
-            "requiredProduct": {
-                "javaSpecificationVersions": ["17"]
-            }
+            "javaSpecificationVersions": ["17"]
         }"#;
         let mut file = File::create(&file_path).unwrap();
         file.write_all(json.as_bytes()).unwrap();
@@ -182,5 +196,26 @@ mod tests {
         );
         assert!(!changed);
         assert!(fields.is_empty());
+    }
+
+    #[test]
+    fn test_update_mule_artifact_json_summary_adds_missing_fields() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("mule-artifact.json");
+        let json = "{}";
+        let mut file = File::create(&file_path).unwrap();
+        file.write_all(json.as_bytes()).unwrap();
+        let (changed, fields) = update_mule_artifact_json_summary(
+            file_path.to_str().unwrap(),
+            "4.9.0",
+            &["17".to_string()],
+            false,
+            false,
+        );
+        assert!(changed);
+        assert!(fields.iter().any(|f| f.contains("minMuleVersion")));
+        assert!(fields
+            .iter()
+            .any(|f| f.contains("javaSpecificationVersions")));
     }
 }
