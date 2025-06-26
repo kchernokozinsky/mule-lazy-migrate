@@ -50,7 +50,7 @@ pub fn run_migration(opts: &MigrationOptions) -> Result<(), Box<dyn std::error::
             "'{}' is not a Mule project (pom.xml or mule-artifact.json missing)",
             opts.project_root
         );
-        log::error!("{}", msg);
+        log::error!("{msg}");
         errors.push(msg.clone());
         print_summary(
             &changed_files,
@@ -92,7 +92,7 @@ pub fn run_migration(opts: &MigrationOptions) -> Result<(), Box<dyn std::error::
         }
     } else {
         let msg = format!("No pom.xml found at {}", pom_path.display());
-        log::warn!("{}", msg);
+        log::warn!("{msg}");
         errors.push(msg);
     }
 
@@ -113,7 +113,7 @@ pub fn run_migration(opts: &MigrationOptions) -> Result<(), Box<dyn std::error::
         }
     } else {
         let msg = format!("No mule-artifact.json found at {}", artifact_path.display());
-        log::warn!("{}", msg);
+        log::warn!("{msg}");
         errors.push(msg);
     }
 
@@ -144,18 +144,15 @@ pub fn run_migration(opts: &MigrationOptions) -> Result<(), Box<dyn std::error::
 
 /// Runs 'mvn versions:use-latest-releases' in the project root and removes pom.xml.versionsBackup if present.
 fn update_maven_dependencies(project_root: &str) {
-    log::info!(
-        "Running 'mvn versions:use-latest-releases' in {}",
-        project_root
-    );
+    log::info!("Running 'mvn versions:use-latest-releases' in {project_root}");
     let status = Command::new("mvn")
         .arg("versions:use-latest-releases")
         .current_dir(project_root)
         .status();
     match status {
         Ok(s) if s.success() => log::info!("Maven dependencies updated to latest releases."),
-        Ok(s) => log::error!("Maven exited with status: {}", s),
-        Err(e) => log::error!("Failed to run Maven: {}", e),
+        Ok(s) => log::error!("Maven exited with status: {s}"),
+        Err(e) => log::error!("Failed to run Maven: {e}"),
     }
     // Cleanup pom.xml.versionsBackup if it exists
     let backup_path = std::path::Path::new(project_root).join("pom.xml.versionsBackup");
@@ -173,7 +170,7 @@ fn update_maven_dependencies(project_root: &str) {
 
 /// Runs 'mvn clean install' in the project root.
 fn build_mule_project(project_root: &str) {
-    log::info!("Running 'mvn clean install' in {}", project_root);
+    log::info!("Running 'mvn clean install' in {project_root}");
     let status = Command::new("mvn")
         .arg("clean")
         .arg("install")
@@ -181,8 +178,8 @@ fn build_mule_project(project_root: &str) {
         .status();
     match status {
         Ok(s) if s.success() => log::info!("Mule project built successfully."),
-        Ok(s) => log::error!("Maven exited with status: {}", s),
-        Err(e) => log::error!("Failed to run Maven: {}", e),
+        Ok(s) => log::error!("Maven exited with status: {s}"),
+        Err(e) => log::error!("Failed to run Maven: {e}"),
     }
 }
 

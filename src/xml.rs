@@ -11,13 +11,13 @@ pub fn update_pom_xml(
     dry_run: bool,
     backup: bool,
 ) {
-    log::info!("Reading pom.xml from {}", path);
+    log::info!("Reading pom.xml from {path}");
     let mut xml_data = fs::read_to_string(path).expect("Failed to read pom.xml");
     let mut changed = false;
 
     // Helper to update only the value inside a property tag
     fn update_property_value(content: &mut String, property_name: &str, new_value: &str) -> bool {
-        let pattern = format!(r#"(<{}>)([^<]*)(</{}>)"#, property_name, property_name);
+        let pattern = format!(r#"(<{property_name}>)([^<]*)(</{property_name}>)"#);
         let re = Regex::new(&pattern).unwrap();
         let mut did_change = false;
         *content = re
@@ -33,11 +33,7 @@ pub fn update_pom_xml(
                     );
                     format!("{}{}{}", &caps[1], new_value, &caps[3])
                 } else {
-                    log::info!(
-                        "  Property '{}' already has value '{}'",
-                        property_name,
-                        new_value
-                    );
+                    log::info!("  Property '{property_name}' already has value '{new_value}'");
                     caps[0].to_string()
                 }
             })
@@ -54,9 +50,9 @@ pub fn update_pom_xml(
 
     if changed {
         if backup {
-            let backup_path = format!("{}.bak", path);
+            let backup_path = format!("{path}.bak");
             fs::copy(path, &backup_path).expect("Failed to create backup");
-            log::info!("Backup created: {}", backup_path);
+            log::info!("Backup created: {backup_path}");
         }
         if dry_run {
             log::info!("[DRY-RUN] Would update pom.xml with the above changes");
@@ -88,7 +84,7 @@ pub fn update_pom_xml_summary(
         new_value: &str,
         updated_props: &mut Vec<String>,
     ) -> bool {
-        let pattern = format!(r#"(<{}>)([^<]*)(</{}>)"#, property_name, property_name);
+        let pattern = format!(r#"(<{property_name}>)([^<]*)(</{property_name}>)"#);
         let re = Regex::new(&pattern).unwrap();
         let mut did_change = false;
         *content = re
@@ -138,7 +134,7 @@ pub fn update_pom_xml_summary(
 
     if changed {
         if backup {
-            let backup_path = format!("{}.bak", path);
+            let backup_path = format!("{path}.bak");
             fs::copy(path, &backup_path).expect("Failed to create backup");
         }
         if !dry_run {

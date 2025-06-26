@@ -12,10 +12,7 @@ pub fn traverse_and_replace(
     dry_run: bool,
     backup: bool,
 ) {
-    log::info!(
-        "🔍 Scanning for files with extensions: {:?}",
-        FILE_EXTENSIONS
-    );
+    log::info!("🔍 Scanning for files with extensions: {FILE_EXTENSIONS:?}");
     log::info!("📝 Replacement rules to apply:");
     for (i, rule) in replacements.iter().enumerate() {
         log::info!("  {}. '{}' -> '{}'", i + 1, rule.from, rule.to);
@@ -55,7 +52,7 @@ pub fn traverse_and_replace(
                             if new_content != content {
                                 files_updated += 1;
                                 if backup {
-                                    let backup_path = path.with_extension(format!("{}.bak", ext));
+                                    let backup_path = path.with_extension(format!("{ext}.bak"));
                                     fs::copy(path, &backup_path).expect("Failed to create backup");
                                     log::info!("    💾 Backup created: {}", backup_path.display());
                                 }
@@ -86,11 +83,7 @@ pub fn traverse_and_replace(
         }
     }
 
-    log::info!(
-        "📊 Summary: Processed {} files, updated {} files",
-        files_processed,
-        files_updated
-    );
+    log::info!("📊 Summary: Processed {files_processed} files, updated {files_updated} files");
 }
 
 pub fn traverse_and_replace_summary(

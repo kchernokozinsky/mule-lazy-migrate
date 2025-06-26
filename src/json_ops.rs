@@ -10,7 +10,7 @@ pub fn update_mule_artifact_json(
     dry_run: bool,
     backup: bool,
 ) {
-    log::info!("Reading mule-artifact.json from {}", path);
+    log::info!("Reading mule-artifact.json from {path}");
     let json_data = fs::read_to_string(path).expect("Failed to read mule-artifact.json");
     let mut v: Value =
         serde_json::from_str(&json_data).expect("Failed to parse mule-artifact.json");
@@ -20,15 +20,11 @@ pub fn update_mule_artifact_json(
     // Check minMuleVersion
     let current_min_version = v["minMuleVersion"].as_str().unwrap_or("not set");
     if current_min_version != min_mule_version {
-        log::info!(
-            "  Updating minMuleVersion: '{}' -> '{}'",
-            current_min_version,
-            min_mule_version
-        );
+        log::info!("  Updating minMuleVersion: '{current_min_version}' -> '{min_mule_version}'");
         v["minMuleVersion"] = Value::String(min_mule_version.to_string());
         changed = true;
     } else {
-        log::info!("  minMuleVersion already at '{}'", min_mule_version);
+        log::info!("  minMuleVersion already at '{min_mule_version}'");
     }
 
     // Check javaSpecificationVersions
@@ -41,24 +37,19 @@ pub fn update_mule_artifact_json(
     let current_java_versions = &v["javaSpecificationVersions"];
     if current_java_versions != &new_java_versions {
         log::info!(
-            "  Updating javaSpecificationVersions: {:?} -> {:?}",
-            current_java_versions,
-            new_java_versions
+            "  Updating javaSpecificationVersions: {current_java_versions:?} -> {new_java_versions:?}"
         );
         v["javaSpecificationVersions"] = new_java_versions;
         changed = true;
     } else {
-        log::info!(
-            "  javaSpecificationVersions already at {:?}",
-            new_java_versions
-        );
+        log::info!("  javaSpecificationVersions already at {new_java_versions:?}");
     }
 
     if changed {
         if backup {
-            let backup_path = format!("{}.bak", path);
+            let backup_path = format!("{path}.bak");
             fs::copy(path, &backup_path).expect("Failed to create backup");
-            log::info!("Backup created: {}", backup_path);
+            log::info!("Backup created: {backup_path}");
         }
         if dry_run {
             log::info!("[DRY-RUN] Would update mule-artifact.json with the above changes");
@@ -93,8 +84,7 @@ pub fn update_mule_artifact_json_summary(
         match obj.get_mut("minMuleVersion") {
             Some(v) => {
                 if v != min_mule_version {
-                    updated_fields
-                        .push(format!("minMuleVersion: '{}' -> '{}'", v, min_mule_version));
+                    updated_fields.push(format!("minMuleVersion: '{v}' -> '{min_mule_version}'"));
                     *v = Value::String(min_mule_version.to_string());
                     changed = true;
                 }
@@ -104,10 +94,7 @@ pub fn update_mule_artifact_json_summary(
                     "minMuleVersion".to_string(),
                     Value::String(min_mule_version.to_string()),
                 );
-                updated_fields.push(format!(
-                    "minMuleVersion: <missing> -> '{}'",
-                    min_mule_version
-                ));
+                updated_fields.push(format!("minMuleVersion: <missing> -> '{min_mule_version}'"));
                 changed = true;
             }
         }
@@ -127,15 +114,14 @@ pub fn update_mule_artifact_json_summary(
         } else {
             obj.insert("javaSpecificationVersions".to_string(), new_val.clone());
             updated_fields.push(format!(
-                "javaSpecificationVersions: <missing> -> {:?}",
-                java_spec_versions
+                "javaSpecificationVersions: <missing> -> {java_spec_versions:?}"
             ));
             changed = true;
         }
     }
     if changed {
         if backup {
-            let backup_path = format!("{}.bak", path);
+            let backup_path = format!("{path}.bak");
             fs::copy(path, &backup_path).expect("Failed to create backup");
         }
         if !dry_run {
