@@ -9,13 +9,35 @@ A robust, user-friendly CLI tool to automate migration of Mule 4 projects to a n
 - Modular and testable codebase
 - Colorized, human-friendly summary of changes at the end
 - Optional Maven integration: update dependencies and build after migration
+- **Supports only flat `javaSpecificationVersions` at the root of `mule-artifact.json`**
+
+## ⚠️ Important: Dependency Version Updates
+- This tool **does NOT update** `<version>` tags inside `<dependency>` blocks in `pom.xml`.
+- If you use the `--update-maven-deps` (`-u`) flag, Maven's `versions:use-latest-releases` will update dependency versions based on what is available in your Maven repositories.
+- The version chosen by Maven may not be the latest if your repositories are missing newer versions.
+- To avoid automatic dependency version changes, **do not use** the `--update-maven-deps` flag.
+
+## Installation
+
+### Homebrew (recommended)
+
+```sh
+brew tap kchernokozinsky/mule-lazy-migrate
+brew install mule-lazy-migrate
+```
+
+### From source
+
+```sh
+cargo install --path .
+```
 
 ## Usage
 
 ```sh
-cargo run --release -- \
+mule-lazy-migrate \
   --config runtime_configs/migration-4.9.4.json \
-  --project-root /path/to/your/mule-project \
+  --project /path/to/your/mule-project \
   --backup
 ```
 
@@ -24,26 +46,27 @@ cargo run --release -- \
 - `--project <path>`: Path to the Mule project root
 - `--dry-run`: Preview changes without modifying files
 - `--backup`: Create `.bak` backups before modifying files
-- `-u`, `--update-maven-deps`: Run `mvn versions:use-latest-releases` before migration
+- `-u`, `--update-maven-deps`: Run `mvn versions:use-latest-releases` before migration (see warning above)
 - `-b`, `--build-mule-project`: Run `mvn clean install` after migration
+- `-v`, `--verbose`: Show debug logs
 
 ### Example (all options)
 ```sh
-cargo run --release -- \
+mule-lazy-migrate \
   --config runtime_configs/migration-4.9.4.json \
-  --project-root /path/to/your/mule-project \
-  --backup -u -b
+  --project /path/to/your/mule-project \
+  --backup -u -b -v
 ```
 
 ## Output
 At the end of each run, a colorized summary is printed, showing all changes, warnings, and errors.
 
 ## Requirements
-- Rust (latest stable)
+- Rust (latest stable) (for building from source)
 - Java & Maven (for Maven integration)
 
 ## License
-MIT 
+MIT
 
 # homebrew-mule-lazy-migrate
 
