@@ -48,7 +48,7 @@ fn main() {
         build_mule_project: cli.build_mule_project,
     };
     if let Err(e) = run_migration(&opts) {
-        eprintln!("Migration failed: {}", e);
+        eprintln!("Migration failed: {e}");
         std::process::exit(1);
     }
 }
